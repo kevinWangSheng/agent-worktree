@@ -110,19 +110,19 @@ impl Cli {
         let path_file = self.path_file.as_deref();
 
         match self.command {
-            Command::New(args) => commands::new::run(args, &config, path_file),
+            Command::New(args) => commands::lifecycle::new::run(args, &config, path_file),
             Command::Ls(args) => commands::ls::run(args, &config),
-            Command::Cd(args) => commands::cd::run(args, &config, path_file),
-            Command::Main => commands::main::run(&config, path_file),
-            Command::Rm(args) => commands::rm::run(args, &config, path_file),
-            Command::Clean => commands::clean::run(&config, path_file),
+            Command::Cd(args) => commands::nav::cd::run(args, &config, path_file),
+            Command::Main => commands::nav::main_cmd::run(&config, path_file),
+            Command::Rm(args) => commands::lifecycle::rm::run(args, &config, path_file),
+            Command::Clean => commands::lifecycle::clean::run(&config, path_file),
             Command::Merge(args) => commands::merge::run(args, &config, path_file),
             Command::Sync(args) => commands::sync::run(args, &config),
             Command::Mv(args) => commands::r#move::run(args, &config, path_file),
-            Command::Setup(args) => commands::setup::run(args),
-            Command::Init(args) => commands::init::run(args),
-            Command::Update => commands::update::run(),
-            Command::SnapContinue => commands::snap_continue::run(&config, path_file),
+            Command::Setup(args) => commands::sys::setup::run(args),
+            Command::Init(args) => commands::sys::init::run(args),
+            Command::Update => commands::sys::update::run(),
+            Command::SnapContinue => commands::snap::resume::run(&config, path_file),
         }
     }
 }

@@ -272,24 +272,34 @@ agent-worktree/
 │   ├── cli/
 │   │   ├── mod.rs       # Cli struct + Command enum
 │   │   └── commands/
-│   │       ├── mod.rs   # 命令模块导出
-│   │       ├── new.rs   # wt new [branch] [--base] [-s]
-│   │       ├── ls.rs    # wt ls [-l] (--long 显示完整路径)
-│   │       ├── cd.rs    # wt cd <branch>
-│   │       ├── main.rs  # wt main
-│   │       ├── rm.rs    # wt rm <branch> [--force]
-│   │       ├── clean.rs # wt clean
-│   │       ├── merge.rs # wt merge [-s] [--into] [-k] [--continue] [--abort]
-│   │       ├── sync.rs  # wt sync [--strategy]
-│   │       ├── move.rs  # wt mv <old> <new>
-│   │       ├── setup.rs  # wt setup [--shell]
-│   │       ├── init.rs   # wt init [--trunk]
-│   │       ├── update.rs # wt update
-│   │       └── snap_continue.rs  # snap 模式 agent 退出后的处理逻辑
+│   │       ├── mod.rs         # 模块声明 + Args 重导出
+│   │       ├── nav/           # 导航（改变 shell 工作目录）
+│   │       │   ├── cd.rs      # wt cd <branch>
+│   │       │   └── main_cmd.rs # wt main
+│   │       ├── lifecycle/     # Worktree 生命周期
+│   │       │   ├── new.rs     # wt new [branch] [--base] [-s]
+│   │       │   ├── rm.rs      # wt rm <branch> [--force]
+│   │       │   └── clean.rs   # wt clean
+│   │       ├── snap/          # Snap 模式完整工作流
+│   │       │   ├── start.rs   # 直接模式 snap 循环（deprecated）
+│   │       │   └── resume.rs  # agent 退出后的处理逻辑
+│   │       ├── sys/           # 系统级操作
+│   │       │   ├── init.rs    # wt init [--trunk]
+│   │       │   ├── setup.rs   # wt setup [--shell]
+│   │       │   └── update.rs  # wt update
+│   │       ├── merge.rs       # wt merge [-s] [--into] [-k] [--continue] [--abort]
+│   │       ├── sync.rs        # wt sync [--strategy]
+│   │       ├── ls.rs          # wt ls [-l]
+│   │       └── move.rs        # wt mv <old> <new>
 │   ├── config/
 │   │   └── mod.rs       # GlobalConfig + ProjectConfig + Config (merged)
 │   ├── git/
-│   │   └── mod.rs       # 调用 git CLI：worktree/branch/merge/rebase/reset/diff-stat
+│   │   ├── mod.rs       # Error 类型 + run/run_extract 辅助 + pub use 重导出
+│   │   ├── repo.rs      # 仓库信息查询：repo_root, repo_name, workspace_id, current_branch, detect_trunk, branch_exists
+│   │   ├── worktree.rs  # Worktree CRUD + WorktreeInfo：create/remove/move/list/parse
+│   │   ├── branch.rs    # 分支操作 + 状态检查：is_merged, delete/rename_branch, diff_shortstat, commit_count
+│   │   ├── ops.rs       # Git 执行操作：merge, rebase, commit, checkout, fetch, abort/continue
+│   │   └── tests.rs     # 单元测试
 │   ├── meta/
 │   │   └── mod.rs       # WorktreeMeta (.toml 读写 + .status.toml 兼容)
 │   ├── process/
@@ -304,5 +314,19 @@ agent-worktree/
 │       ├── mod.rs
 │       └── branch_name.rs  # generate_branch_name, generate_unique_branch_name
 └── tests/
-    └── integration.rs   # 集成测试（CLI 命令端到端验证）
+    ├── common/
+    │   └── mod.rs          # 共享测试辅助：wt_binary, setup_git_repo, setup_worktree_test_env
+    ├── cmd_help.rs         # help/version/strategy 显示测试
+    ├── cmd_init.rs         # wt init 测试
+    ├── cmd_new.rs          # wt new + worktree 生命周期测试
+    ├── cmd_ls.rs           # wt ls 测试
+    ├── cmd_cd.rs           # wt cd 测试
+    ├── cmd_rm.rs           # wt rm 测试
+    ├── cmd_mv.rs           # wt mv 测试
+    ├── cmd_sync.rs         # wt sync 测试
+    ├── cmd_merge.rs        # wt merge 测试
+    ├── cmd_clean.rs        # wt clean 测试
+    ├── cmd_main.rs         # wt main 测试
+    ├── cmd_snap.rs         # snap 模式测试
+    └── cmd_misc.rs         # 错误处理 + 未知命令测试
 ```

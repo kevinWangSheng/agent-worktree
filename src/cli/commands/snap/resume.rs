@@ -187,7 +187,7 @@ fn execute_action(
                 .map_err(|e| Error::Other(e.to_string()))?;
             git::checkout(&ctx.trunk)?;
 
-            if let Err(e) = super::merge::execute_merge(&ctx.branch, &ctx.trunk, config.merge_strategy) {
+            if let Err(e) = super::super::merge::execute_merge(&ctx.branch, &ctx.trunk, config.merge_strategy) {
                 eprintln!("Merge conflict:\n{e}");
                 eprintln!();
                 // Clean up main repo: reset --merge covers both regular and squash conflicts
