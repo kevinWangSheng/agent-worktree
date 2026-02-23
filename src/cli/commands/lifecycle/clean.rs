@@ -4,11 +4,20 @@
 
 use std::path::Path;
 
+use clap::Args;
+
 use crate::cli::{write_path_file, Result};
 use crate::config::Config;
 use crate::git;
 
-pub fn run(config: &Config, path_file: Option<&Path>) -> Result<()> {
+#[derive(Args)]
+pub struct CleanArgs {
+    /// Preview cleanup without executing
+    #[arg(long)]
+    dry_run: bool,
+}
+
+pub fn run(args: CleanArgs, config: &Config, path_file: Option<&Path>) -> Result<()> {
     // Get main repo path before any operations
     let main_path = git::repo_root()?;
     let workspace_id = git::workspace_id()?;
@@ -47,6 +56,12 @@ pub fn run(config: &Config, path_file: Option<&Path>) -> Result<()> {
 
         // Check if worktree has no diff from trunk
         if !git::has_diff_from(branch, &trunk).unwrap_or(true) {
+            if args.dry_run {
+                eprintln!("[dry-run] Would remove worktree: {branch} (clean, no diff from {trunk})");
+                cleaned += 1;
+                continue;
+            }
+
             // Check if user is currently inside this worktree
             let inside = git::is_cwd_inside(&wt.path);
 

@@ -67,6 +67,10 @@ pub struct MergeArgs {
     /// Skip pre-merge hooks
     #[arg(short = 'H', long)]
     skip_hooks: bool,
+
+    /// Preview merge without executing
+    #[arg(long)]
+    dry_run: bool,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -152,6 +156,22 @@ pub fn run(args: MergeArgs, config: &Config, path_file: Option<&Path>) -> Result
         .strategy
         .map(MergeStrategy::from)
         .unwrap_or(config.merge_strategy);
+
+    // Dry-run: preview what would happen
+    if args.dry_run {
+        let commit_count = git::commit_count(&trunk, &current).unwrap_or(0);
+        eprintln!("[dry-run] Would merge {current} into {trunk} using {strategy:?} strategy");
+        eprintln!("[dry-run] Commits: {commit_count}");
+        let stats = git::diff_shortstat(&trunk, &current).unwrap_or(git::DiffStat {
+            insertions: 0,
+            deletions: 0,
+        });
+        eprintln!(
+            "[dry-run] Diff: +{} -{} lines",
+            stats.insertions, stats.deletions
+        );
+        return Ok(());
+    }
 
     // Run pre-merge hooks (in worktree, before switching to main)
     if !args.skip_hooks && !config.hooks.pre_merge.is_empty() {

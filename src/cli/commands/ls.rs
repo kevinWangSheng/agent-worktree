@@ -3,6 +3,7 @@
 // ===========================================================================
 
 use clap::Args;
+use serde::Serialize;
 
 use crate::cli::Result;
 use crate::config::Config;
@@ -13,6 +14,10 @@ pub struct LsArgs {
     /// Show full path for each worktree
     #[arg(short, long)]
     pub long: bool,
+
+    /// Output as JSON
+    #[arg(long)]
+    pub json: bool,
 }
 
 pub fn run(args: LsArgs, config: &Config) -> Result<()> {
@@ -20,6 +25,10 @@ pub fn run(args: LsArgs, config: &Config) -> Result<()> {
     let wt_dir = config.workspaces_dir.join(&workspace_id);
 
     if !wt_dir.exists() {
+        if args.json {
+            println!("[]");
+            return Ok(());
+        }
         eprintln!("No worktrees for this project.");
         return Ok(());
     }
@@ -32,6 +41,10 @@ pub fn run(args: LsArgs, config: &Config) -> Result<()> {
         .collect();
 
     if managed.is_empty() {
+        if args.json {
+            println!("[]");
+            return Ok(());
+        }
         eprintln!("No worktrees for this project.");
         return Ok(());
     }
@@ -58,7 +71,9 @@ pub fn run(args: LsArgs, config: &Config) -> Result<()> {
         let u = git::diff_shortstat_in(&wt.path)
             .unwrap_or(git::DiffStat { insertions: 0, deletions: 0 });
 
-        let path = if args.long {
+        let path = if args.json {
+            Some(wt.path.display().to_string())
+        } else if args.long {
             Some(shorten_path(&wt.path, &home))
         } else {
             None
@@ -75,10 +90,17 @@ pub fn run(args: LsArgs, config: &Config) -> Result<()> {
         });
     }
 
-    print_table(&rows);
+    if args.json {
+        let json = serde_json::to_string_pretty(&rows)
+            .map_err(|e| crate::cli::Error::Other(format!("JSON serialization failed: {}", e)))?;
+        println!("{}", json);
+    } else {
+        print_table(&rows);
+    }
     Ok(())
 }
 
+#[derive(Serialize)]
 struct Row {
     branch: String,
     is_current: bool,
@@ -86,6 +108,7 @@ struct Row {
     commits: usize,
     insertions: usize,
     deletions: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
     path: Option<String>,
 }
 

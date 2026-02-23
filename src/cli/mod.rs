@@ -79,13 +79,22 @@ enum Command {
     Rm(commands::RmArgs),
 
     /// Remove worktrees with no diff from trunk
-    Clean,
+    Clean(commands::CleanArgs),
 
     /// Merge current worktree into trunk
     Merge(commands::MergeArgs),
 
     /// Sync current worktree from trunk
     Sync(commands::SyncArgs),
+
+    /// Show diff between current branch and trunk
+    Diff(commands::DiffArgs),
+
+    /// Execute a command in each managed worktree
+    Exec(commands::ExecArgs),
+
+    /// Show status of current branch and worktree
+    Status(commands::StatusArgs),
 
     /// Rename a worktree branch
     Mv(commands::MoveArgs),
@@ -115,9 +124,12 @@ impl Cli {
             Command::Cd(args) => commands::nav::cd::run(args, &config, path_file),
             Command::Main => commands::nav::main_cmd::run(&config, path_file),
             Command::Rm(args) => commands::lifecycle::rm::run(args, &config, path_file),
-            Command::Clean => commands::lifecycle::clean::run(&config, path_file),
+            Command::Clean(args) => commands::lifecycle::clean::run(args, &config, path_file),
             Command::Merge(args) => commands::merge::run(args, &config, path_file),
             Command::Sync(args) => commands::sync::run(args, &config),
+            Command::Diff(args) => commands::diff::run(args, &config),
+            Command::Exec(args) => commands::exec::run(args, &config),
+            Command::Status(args) => commands::status::run(args, &config),
             Command::Mv(args) => commands::r#move::run(args, &config, path_file),
             Command::Setup(args) => commands::sys::setup::run(args),
             Command::Init(args) => commands::sys::init::run(args),
